@@ -11,11 +11,14 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <string>
-#include <string.h>
 #include "protocols.h"
 #include "globals.h"
 using namespace std;
 /* n slave -> n server -> n thread */
+#define TIMEINTERVAL_CLIENT 5
+#define BUFFER_SIZE 2048
+#define MASTER_PORT 9999
+
 int getMyAddress(){
 	int index = -1;
 	for(int i = 0; i < length; i++){
@@ -58,11 +61,8 @@ void* processSocketClient(void *) {
 	puts("Slave: connection successful");
 	while (1) {
 		sleep(TIMEINTERVAL_CLIENT);
-
 		/* read data form hash table -> send */
-
-		message = "<msg><freq>100</freq><asym>777</asym><dist>10000</dist></msg>";
-
+		message = "<msg><count>888</count><freq>100</freq><asym>777</asym><dist>10000</dist></msg>";
 		if (send(sock, message, strlen(message), 0) < 0) {
 			perror("Client: send failed");
 			return NULL;

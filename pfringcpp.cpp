@@ -20,7 +20,7 @@ using namespace std;
 
 
 pfring *pd;
-int num_threads = 1;
+int num_threads = 3;
 
 u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
@@ -100,7 +100,6 @@ void * startPFring(void *) {
 	packet_direction direction = rx_and_tx_direction; //review
 
 	/* review */
-	num_threads = 4;
 	use_extended_pkt_header = 1;
 
 	if (device == NULL)

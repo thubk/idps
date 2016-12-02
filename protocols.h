@@ -3,12 +3,14 @@
 #define PROTOCOLS_H_
 
 #include <array>
-#include <string.h>
 #include <string>
+#include <string.h>
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
 
+#define OPEN_COUNTER		"<count>"
+#define CLOSE_COUNTER		"</count>"
 #define OPEN_FREQUENCY 		"<freq>"
 #define CLOSE_FREQUENCY 	"</freq>"
 #define OPEN_ASYMMETRIC		"<asym>"
@@ -24,7 +26,7 @@
 using namespace std;
 
 char* sendSTATUS(string status);
-char* sendMessage(uint32_t freq, uint32_t asym, uint32_t distnum);
+char* sendMessage(uint32_t count, uint32_t freq, uint32_t asym, uint32_t distnum);
 bool readStatus(char *msg);
 std::array<uint32_t, 4> readMessage(char* msg);
 #endif /* PROTOCOLS_H_ */

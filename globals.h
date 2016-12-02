@@ -1,20 +1,20 @@
 #ifndef GLOBALS_H_
 #define GLOBALS_H_
+#include <iostream>
 #include <array>
-#include <string>
-#include <string.h>
 #include <sstream>
+#include <math.h>
+#include <string>
 
-#include "BidirectionalCountSketch.h"
+#include "BiCountSketch.h"
+#include "CountMinSketch.h"
+using namespace std;
 
-#define MASTER_PORT 9999
-#define DEFAULT_ADDRESS "127.0.0.1"
-#define BUFFER_SIZE 2048
-#define TIMEINTERVAL_CLIENT 5
-#define TIMEINTERVAL_START 5
-#define MAX_CONNECTIONS 5
-#define MAX_THREAD 5
-#define MAX_MASTER 10 /* max: 10 server */
+/* 8: number of bucket << | 16: hash function */
+BiCountSketch bcs(8, 16);
+CountMinSketch cms(8,16);
+
+#define MAX_MASTER 3 /* max: 3 server */
 
 uint8_t length;/* number of addresses */
 string address[MAX_MASTER];
@@ -23,7 +23,6 @@ bool used_address[MAX_MASTER];
 
 
 /* 65535 buckets, 8 hash functions */
-BidirectionalCountSketch bcs(65535, 8);
 
 uint32_t getIPAddress(const char *addr) {
 		int byte[4]{0};

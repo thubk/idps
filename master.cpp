@@ -1,13 +1,11 @@
 #include <iostream>
+#include <string>
 #include <unistd.h>
 #include <pthread.h>
 #include <sched.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/poll.h>
-#include <time.h>
-#include <string.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <errno.h>
@@ -15,6 +13,9 @@
 #include "globals.h"
 using namespace std;
 
+#define BUFFER_SIZE 2048
+#define MAX_CONNECTIONS 3
+#define MASTER_PORT 9999
 void* handleConnection(void *sock_desc) {
 	int sock = *(int*) sock_desc;
 	int read_size;
