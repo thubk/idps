@@ -1,28 +1,59 @@
-
 #include "CountMinSketch.h"
 
-CountMinSketch::CountMinSketch(uint64_t m_bits, uint8_t numHashes,
-		Bucket bucket) :
-		k_numHashes(numHashes), m_bits_row(numHashes,
-				vector<Bucket>(m_bits, Bucket())), bf_row(numHashes,
-				vector<BloomFilter>(m_bits, BloomFilter())) {
-
-}
-
 /* BCS ALGORITHM */
-void CountMinSketch::process(const uint8_t *key1, const uint8_t *key2, size_t lenKey) {
+
+/* key1: DIP , key2: DIP|SIP, key3: SIP, key: DIP(uint32) */
+void CountMinSketch::process(const void * key1, const void * key2,
+		const void * key3, size_t lenKey, uint32_t key) {
+
+	bool flag = false;/* first */
 	auto hashValues = hashFunctionBCS(key1, lenKey);
-	for (int n = 0; n < k_numHashes; n++) {
+	if (contain(key1, lenKey)) {
+		flag = true;
+	}
+	for (uint8_t n = 0; n < k_numHashes; n++) {
 		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
 				m_bits_row[n].size());
-		m_bits_row[n][index].increaseCounter();
+		if (m_bits_row[n][index].getCounter() == 0) {
+			bf_row[n].add(key2, sizeof(uint64_t)); //review 32 - 64
+			m_bits_row[n][index].increaseCounter();
+		} else {
+			if (!bf_row[n].contain(key2, sizeof(uint64_t))) { //review
+				bf_row[n].add(key2, sizeof(uint64_t)); //review
+				m_bits_row[n][index].increaseCounter();
+			}
+		}
 	}
-
+	uint8_t k = getHashIndex(key1, lenKey, flag, key);
+	for (uint8_t n = 0; n < k_numHashes; n++) {
+		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
+				m_bits_row[n].size());
+		if (n == k) {
+			m_bits_row[n][index].estimatePCSA64(key3, sizeof(uint32_t));
+			//m_bits_row[n][index].estimateHLL64(key3, sizeof(uint32_t));
+			m_bits_row[n][index].setOwner(key);
+			break;
+		}
+	}
+	/* estimate dist address */
+}
+void CountMinSketch::update(const void * key1, const void * key2,
+		size_t lenKey) {
+	auto hashValues = hashFunctionBCS(key1, lenKey);
+	for (uint8_t n = 0; n < k_numHashes; n++) {
+		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
+				m_bits_row[n].size());
+		if (m_bits_row[n][index].getCounter() != 0) {
+			if (bf_row[n].contain(key2, sizeof(uint64_t))) { //review
+				m_bits_row[n][index].decreaseCounter();
+			}
+		}
+	}
 }
 
-bool CountMinSketch::contain(const uint8_t *key, size_t lenKey) {
+bool CountMinSketch::contain(const void * key, size_t lenKey) {
 	auto hashValues = hashFunctionBCS(key, lenKey);
-	for (int n = 0; n < k_numHashes; n++) {
+	for (uint8_t n = 0; n < k_numHashes; n++) {
 		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
 				m_bits_row[n].size());
 		if (m_bits_row[n][index].getCounter() == 0) {
@@ -32,12 +63,12 @@ bool CountMinSketch::contain(const uint8_t *key, size_t lenKey) {
 	return true;
 }
 
-uint16_t CountMinSketch::getMinFrequence(const uint8_t *key, size_t lenKey) {
+uint16_t CountMinSketch::getMinFrequence(const void * key, size_t lenKey) {
 	auto hashValues = hashFunctionBCS(key, lenKey);
 	uint16_t index0 = nthHashFunctionBCS(0, hashValues[0], hashValues[1],
 			m_bits_row[0].size());
 	uint16_t _min = m_bits_row[0][index0].getCounter();
-	for (int n = 0; n < k_numHashes; n++) {
+	for (uint8_t n = 0; n < k_numHashes; n++) {
 		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
 				m_bits_row[n].size());
 		uint16_t temp = m_bits_row[n][index].getCounter();
@@ -46,3 +77,43 @@ uint16_t CountMinSketch::getMinFrequence(const uint8_t *key, size_t lenKey) {
 	return _min;
 }
 
+uint8_t CountMinSketch::getHashIndex(const void * key1, size_t lenKey,
+		bool flag, uint32_t key) {
+	auto hashValues = hashFunctionBCS(key1, lenKey);
+	uint8_t temp = -1;
+	if (!flag) {
+		for (uint8_t n = 0; n < k_numHashes; n++) {
+			uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
+					m_bits_row[n].size());
+			if (m_bits_row[n][index].getCounter() == 1) {
+				temp = n;
+				break;
+			}
+		}
+	} else {
+		for (uint8_t n = 0; n < k_numHashes; n++) {
+			uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
+					m_bits_row[n].size());
+			if (m_bits_row[n][index].getOwner() == key) {/* review */
+				temp = n;
+				break;
+			}
+		}
+	}
+	return temp;
+}
+
+uint32_t CountMinSketch::getDistNumBCS(const void * key1, size_t lenKey,
+		uint32_t key) {
+	uint32_t temp = 0;
+	auto hashValues = hashFunctionBCS(key1, lenKey);
+	for (uint8_t n = 0; n < k_numHashes; n++) {
+		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
+				m_bits_row[n].size());
+		if (m_bits_row[n][index].getOwner() == key) {
+			temp = m_bits_row[n][index].getDistNum();
+			break;
+		}
+	}
+	return temp;
+}

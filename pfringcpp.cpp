@@ -10,7 +10,6 @@
 #include <errno.h>
 #include "pfring.h"
 #include "pcap.h"
-
 using namespace std;
 
 #define ALARM_SLEEP			1
@@ -25,13 +24,10 @@ pfring_stat pfringStats;
 
 static struct timeval startTime;
 
-
-char* intoa(unsigned int addr);
-
+inline char* intoa(unsigned int addr);
 
 u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
-
 
 int bind2core(u_int core_id) {
 	cpu_set_t cpuset;
@@ -47,11 +43,29 @@ int bind2core(u_int core_id) {
 		return (0);
 	}
 }
-void processsPacket(const struct pfring_pkthdr *h, const u_char *p,
+
+double delta_time(struct timeval * now, struct timeval * before) {
+	time_t delta_seconds;
+	time_t delta_microseconds;
+
+	delta_seconds = now->tv_sec - before->tv_sec;
+	delta_microseconds = now->tv_usec - before->tv_usec;
+
+	if (delta_microseconds < 0) {
+		delta_microseconds += 1000000;
+		--delta_seconds;
+	}
+	return ((double) (delta_seconds * 1000) + (double) delta_microseconds / 1000);
+}
+
+
+
+void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 		const u_char *user_bytes) {
 	long threadId = (long) user_bytes;
-	// code here
-
+	cout << "Thread Id: " << threadId << "\n";
+	//string ip_src = intoa(hdr->extended_hdr.parsed_pkt.ip_src.v4);
+	//cout << unsigned(hdr->extended_hdr.parsed_pkt.tcp.flags) << "\n";
 }
 void* packet_consumer_thread(void* _id) {
 	long thread_id = (long) _id;
@@ -63,27 +77,25 @@ void* packet_consumer_thread(void* _id) {
 	struct pfring_pkthdr hdr;
 	if (num_threads > 1 && numCPU > 1) {
 		if (bind2core(core_id) == 0) {
-			cout << "Set thread " << thread_id << " on core " << core_id <<  "/" << numCPU << endl;
+			cout << "Set Thread " << thread_id << " on core " << core_id << "/"
+					<< numCPU << endl;
 		}
 	}
 	memset(&hdr, 0, sizeof(hdr));
-	while (1) {
+	while (1) {/* running */
 		int rc;
 		u_int len;
 		if ((rc = pfring_recv(pd, &buffer_p, NO_ZC_BUFFER_LEN, &hdr,
 				wait_for_packet)) > 0) {
 			processsPacket(&hdr, buffer, (u_char*) thread_id);
-			cout << intoa(hdr.extended_hdr.parsed_pkt.ip_src.v4) << endl;
-			cout << unsigned(hdr.extended_hdr.parsed_pkt.tcp.flags) << endl;
-
-
 		} else {
-			if (wait_for_packet == 0) sched_yield();
+			if (wait_for_packet == 0)
+				sched_yield();
 		}
 	}
 	return NULL;
 }
-int startPFring() {
+void * startPFring(void *) {
 	char *device = NULL, c, buff[32], path[256] = { 0 }, *reflector_device =
 	NULL;
 	int promisc = 1, snaplen = DEFAULT_SNAPLEN, rc;
@@ -92,44 +104,57 @@ int startPFring() {
 	packet_direction direction = rx_and_tx_direction; //review
 
 	/* review */
-	num_threads = 5;
+	num_threads = 4;
 	use_extended_pkt_header = 1;
 
-	if (device == NULL) device = DEFAULT_DEVICE;
+	if (device == NULL)
+		device = (char *)DEFAULT_DEVICE;
 
 	bind2core(bind_core);
 
-	if (num_threads > 1) 			flags |= PF_RING_REENTRANT;
-	if (use_extended_pkt_header)	flags |= PF_RING_LONG_HEADER;
-	if (promisc) 					flags |= PF_RING_PROMISC;
-									flags |= PF_RING_ZC_SYMMETRIC_RSS;
+	if (num_threads > 1)
+		flags |= PF_RING_REENTRANT;
+	if (use_extended_pkt_header)
+		flags |= PF_RING_LONG_HEADER;
+	if (promisc)
+		flags |= PF_RING_PROMISC;
+	flags |= PF_RING_ZC_SYMMETRIC_RSS;
 
 	pd = pfring_open(device, snaplen, flags);
 	pfring_enable_ring(pd);
 	if (pd == NULL) {
-		cout << "pfring_open error [%s] (pf_ring not loaded or interface %s is down ?)\n" << endl;
-		return -1;
+		cout
+				<< "pfring_open error [%s] (pf_ring not loaded or interface %s is down ?)\n"
+				<< endl;
+		return NULL;
 	}
-	cout << "# Device RX channels: " << unsigned(pfring_get_num_rx_channels(pd)) << endl;
+	cout << "# Device RX channels: " << unsigned(pfring_get_num_rx_channels(pd))
+			<< endl;
 	cout << "# Polling threads: " << num_threads << endl;
+
 	pfring_set_direction(pd, direction);
+
 	if (num_threads <= 1) {
 
 	} else {
 		pthread_t my_thread;
 		long i;
-		for (i = 0; i < num_threads; i++)
+		for (i = 0; i < num_threads; i++) {
 			pthread_create(&my_thread, NULL, packet_consumer_thread, (void*) i);
+		}
 
-		for (i = 0; i < num_threads; i++)
+		for (i = 0; i < num_threads; i++) {
 			pthread_join(my_thread, NULL);
+		}
+
 	}
-	return 0;
+	return NULL;
 }
 
-char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
+inline char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
 	char *cp, *retStr;
-	u_int byte;;
+	u_int byte;
+	;
 	int n;
 
 	cp = &buf[bufLen];
@@ -143,17 +168,17 @@ char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
 		if (byte > 0) {
 			*--cp = byte % 10 + '0';
 			byte /= 10;
-			if(byte > 0)
+			if (byte > 0)
 				*--cp = byte + '0';
 		}
 		*--cp = '.';
 		addr >>= 8;
 	} while (--n > 0);
-	retStr = (char*)(cp+1);
+	retStr = (char*) (cp + 1);
 	return retStr;
 }
 
-char* intoa(unsigned int addr) {
+inline char* intoa(unsigned int addr) {
 	static char buf[sizeof "fff.fff.fff.fff"];
 	return _intoa(addr, buf, sizeof(buf));
 }

@@ -17,20 +17,21 @@ private:
 	uint8_t k_numHashes;
 	std::vector<bool> m_bits;
 public:
-	BloomFilter();
-	BloomFilter(uint64_t m_bits, uint8_t numHashes);
-	void add(const uint8_t *key, size_t lenKey);/* key: DIP|SIP */
-	bool contain(const uint8_t *key, size_t lenKey);
+	BloomFilter(): m_bits(65536, false), k_numHashes(32) {}
+	BloomFilter(uint64_t m_bits, uint8_t numHashes) : m_bits(m_bits, false), k_numHashes(numHashes) {}
+	void add(const void * key, size_t lenKey);/* key: DIP|SIP */
+	bool contain(const void * key, size_t lenKey);
+	inline std::array<uint64_t, 2> hashFunctionBF(const void * key, size_t lenKey) {
+		std::array<uint64_t, 2>  hashValue;
+		MurmurHash3_x64_128(key, lenKey, 0, hashValue.data());
+		return hashValue;
+	}
+
+	inline uint64_t nthHashFunctionBF(uint8_t nth, uint64_t hashA, uint64_t hashB, uint64_t filterSize) {
+		return (hashA + nth*hashB) % filterSize;
+	}
 };
 
-std::array<uint64_t, 2> hashFunctionBF(const uint8_t *key, size_t lenKey) {
-	 std::array<uint64_t, 2>  hashValue;
-	MurmurHash3_x64_128(key, lenKey, 0, hashValue.data());
-	return hashValue;
-}
 
-uint64_t nthHashFunctionBF(uint8_t nth, uint64_t hashA, uint64_t hashB, uint64_t filterSize) {
-	return (hashA + nth*hashB) % filterSize;
-}
 
 #endif /* BLOOMFILTER_H_ */

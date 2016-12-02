@@ -5,7 +5,7 @@ LIBPCAP_DIR	=	/usr/local/lib
 INCLUDE		=	-I$(KERNEL_DIR) -I$(LIBPCAP_DIR) -I/usr/local/include
 LIBPFRING	=	libpfring.a
 RANLIB		=	ranlib
-OBJ			=	MurmurHash3.o CountMinSketch.o BloomFilter.o pfringcpp.o Bucket.o
+OBJ			=	MurmurHash3.o CountMinSketch.o BloomFilter.o pfringcpp.o Bucket.o server.o client.o protocols.o
 LIBS		=	/usr/local/lib/libpfring.so -lpthread
 all: $(LIBPFRING) main
 
@@ -31,5 +31,15 @@ pfringcpp.o: pfringcpp.cpp
 
 Bucket.o: Bucket.cpp Bucket.h
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
+server.o: server.cpp
+	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
+client.o: client.cpp
+	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
+protocols.o: protocols.cpp protocols.h
+	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
 clean:
 		/bin/rm -f $(TARGET) *.o *~ $(LIBPFRING) main
