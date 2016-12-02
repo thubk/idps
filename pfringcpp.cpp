@@ -10,21 +10,17 @@
 #include <errno.h>
 #include "pfring.h"
 #include "pcap.h"
+#include "globals.h"
 using namespace std;
 
-#define ALARM_SLEEP			1
 #define DEFAULT_SNAPLEN 	128
 #define MAX_NUM_THREADS 	64
 #define DEFAULT_DEVICE     "wlan0"
 #define NO_ZC_BUFFER_LEN	9000
 
+
 pfring *pd;
-int verbose = 0, num_threads = 1;
-pfring_stat pfringStats;
-
-static struct timeval startTime;
-
-inline char* intoa(unsigned int addr);
+int num_threads = 1;
 
 u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
@@ -149,37 +145,5 @@ void * startPFring(void *) {
 
 	}
 	return NULL;
-}
-
-inline char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
-	char *cp, *retStr;
-	u_int byte;
-	;
-	int n;
-
-	cp = &buf[bufLen];
-	*--cp = '\0';
-
-	n = 4;
-	do {
-		byte = addr & 0xff;
-		*--cp = byte % 10 + '0';
-		byte /= 10;
-		if (byte > 0) {
-			*--cp = byte % 10 + '0';
-			byte /= 10;
-			if (byte > 0)
-				*--cp = byte + '0';
-		}
-		*--cp = '.';
-		addr >>= 8;
-	} while (--n > 0);
-	retStr = (char*) (cp + 1);
-	return retStr;
-}
-
-inline char* intoa(unsigned int addr) {
-	static char buf[sizeof "fff.fff.fff.fff"];
-	return _intoa(addr, buf, sizeof(buf));
 }
 

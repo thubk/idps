@@ -17,8 +17,8 @@ bool readStatus(char* msg){
 	return status;
 }
 
-std::array<uint32_t, 3> readMessage(char* msg) {
-	std::array<uint32_t, 3> value;
+std::array<uint32_t, 4> readMessage(char* msg) {
+	std::array<uint32_t, 4> values{};
 	string s = (string) msg;
 	s = s.substr(strlen(START));
 	s = s.substr(strlen(OPEN_FREQUENCY));
@@ -38,13 +38,14 @@ std::array<uint32_t, 3> readMessage(char* msg) {
 	s = s.substr(f);
 	if (s == END) {
 		/* send status : OK */
-		value[0] = atoi(v1.c_str());
-		value[1] = atoi(v2.c_str());
-		value[2] = atoi(v3.c_str());
+		values[0] = atoi(v1.c_str());
+		values[1] = atoi(v2.c_str());
+		values[2] = atoi(v3.c_str());
+		values[3] = 1;
 	} else {
 		/* send status: NO */
 	}
-	return value;
+	return values;
 }
 char* sendSTATUS(string status) {
 	string s = "<msg><status>" + status + "</status></msg>";

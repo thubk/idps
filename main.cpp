@@ -1,40 +1,50 @@
 #include <iostream>
+#include <string.h>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <pthread.h>
-using namespace std;
+#include <typeinfo>
 #include "CountMinSketch.h"
 #include "pfringcpp.cpp"
-#include "server.cpp"
-#include "client.cpp"
-#include "protocols.h"
+#include "globals.h"
+#include "master.cpp"
+#include "slave.cpp"
+using namespace std;
 
 int main(int argc, char *argv[]) {
-
-//	CountMinSketch cms(5, 128);
-//	uint32_t key1 = 3232235525;/*192.168.0.5*/
-//	uint32_t key2 = 3232235526;/*192.168.0.6*/
-//	uint32_t key3 = 3221225572;/*192.0.0.100*/
-//	uint32_t key4 = 3221225482;/*192.0.0.10*/
-//	uint64_t key5 = (uint64_t(key1) << 32) + uint64_t(key3);
-//	uint64_t key6 = (uint64_t(key2) << 32) + uint64_t(key4);
-//
-//
-//	cms.process(&key2, &key6, &key4, sizeof(uint32_t), key2);
-//	cms.process(&key2, &key6, &key4, sizeof(uint32_t), key2);
-//	cms.process(&key1, &key5, &key3, sizeof(uint32_t), key1);
-//	for (uint32_t i = 1; i < 10000; i++) {
-//		key4 += i;
-//		uint64_t temp = (uint64_t(key1) << 32) + uint64_t(key4);
-//		cms.process(&key1, &temp, &key4, sizeof(uint32_t), key1);
+//	pthread_t thread[MAX_THREAD];
+//	string len;
+//	string line;
+//	ifstream infile("config");
+//	getline(infile, len);
+//	length = atoi(len.c_str());
+//	uint8_t i = 0;
+//	while (getline(infile, line)) {
+//		string addr = line;
+//		size_t f = addr.find(":");
+//		address[i] = addr.substr(0, f);
+//		server_list[i] = addr.substr(f+1);
+//		i++;
 //	}
-//	cout << cms.getDistNumBCS(&key1, sizeof(uint32_t), key1) << endl;
-//	cout << cms.getDistNumBCS(&key2, sizeof(uint32_t), key2) << endl;
-	pthread_t thread[3];
-	pthread_create(&thread[0], NULL, processSocketServer, NULL);
-	pthread_create(&thread[1], NULL, startPFring, NULL);
-	sleep(10);
-	pthread_create(&thread[2], NULL, processSocketClient, NULL);
-	while (1);
+//	pthread_create(&thread[length], NULL, startPFring, NULL);
+//	for (uint8_t n = 0; n < length; n++) {
+//		if (address[n] == DEFAULT_ADDRESS) {
+//			used_address[n] = true; /* using */
+//			pthread_create(&thread[n], NULL, processSocketServer, NULL);
+//		} else {
+//			sleep(TIMEINTERVAL_START);
+//			pthread_create(&thread[n], NULL, processSocketClient, NULL);
+//		}
+//	}
+//	while (1);
 
+	cout << "ngo minh nhat ";
+//	CountMinSketch cms(65535, 8);
+//	uint32_t key = 3232235620;
+//	cms.process(&key,sizeof(uint32_t), key);
+//	cout << cms.contain(&key, sizeof(uint32_t), key);
 	return 0;
 }

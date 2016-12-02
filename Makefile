@@ -5,7 +5,7 @@ LIBPCAP_DIR	=	/usr/local/lib
 INCLUDE		=	-I$(KERNEL_DIR) -I$(LIBPCAP_DIR) -I/usr/local/include
 LIBPFRING	=	libpfring.a
 RANLIB		=	ranlib
-OBJ			=	MurmurHash3.o CountMinSketch.o BloomFilter.o pfringcpp.o Bucket.o server.o client.o protocols.o
+OBJ			=	MurmurHash3.o BidirectionalCountSketch.o CountMinSketch.o BloomFilter.o pfringcpp.o Bucket.o BucketCMS.o master.o slave.o protocols.o
 LIBS		=	/usr/local/lib/libpfring.so -lpthread
 all: $(LIBPFRING) main
 
@@ -23,6 +23,9 @@ MurmurHash3.o: MurmurHash3.cpp MurmurHash3.h
 CountMinSketch.o: CountMinSketch.cpp CountMinSketch.h
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
 	
+BidirectionalCountSketch.o: BidirectionalCountSketch.cpp BidirectionalCountSketch.h
+	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
 BloomFilter.o: BloomFilter.cpp BloomFilter.h
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
 
@@ -32,10 +35,13 @@ pfringcpp.o: pfringcpp.cpp
 Bucket.o: Bucket.cpp Bucket.h
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
 	
-server.o: server.cpp
+BucketCMS.o: BucketCMS.cpp BucketCMS.h
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
 	
-client.o: client.cpp
+master.o: master.cpp
+	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
+	
+slave.o: slave.cpp
 	$(CPP) $(CFLAGS) -c  $(INCLUDE) $<
 	
 protocols.o: protocols.cpp protocols.h
