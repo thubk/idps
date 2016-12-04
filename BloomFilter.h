@@ -14,11 +14,11 @@ using namespace std;
 
 class BloomFilter {
 private:
-	uint8_t k_numHashes;
+	int k_numHashes;
 	std::vector<bool> m_bits;
 public:
 	BloomFilter(): m_bits(65536, false), k_numHashes(32) {}
-	BloomFilter(uint64_t m_bits, uint8_t numHashes) : m_bits(m_bits, false), k_numHashes(numHashes) {}
+	BloomFilter(uint64_t m_bits, int numHashes) : m_bits(m_bits, false), k_numHashes(numHashes) {}
 	void add(const void * key, size_t lenKey);/* key: DIP|SIP */
 	bool contain(const void * key, size_t lenKey);
 	inline std::array<uint64_t, 2> hashFunctionBF(const void * key, size_t lenKey) {
@@ -27,7 +27,7 @@ public:
 		return hashValue;
 	}
 
-	inline uint64_t nthHashFunctionBF(uint8_t nth, uint64_t hashA, uint64_t hashB, uint64_t filterSize) {
+	inline uint64_t nthHashFunctionBF(int nth, uint64_t hashA, uint64_t hashB, uint64_t filterSize) {
 		return (hashA + nth*hashB) % filterSize;
 	}
 };

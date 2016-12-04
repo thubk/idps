@@ -14,12 +14,12 @@ using namespace std;
 class Bucket {
 private:
 	uint32_t owner;
-	uint16_t k_numHashes;/*  */
-	uint8_t m_bits; /* size of bitmap */
+	int k_numHashes;/*  */
+	int m_bits; /* size of bitmap */
 	uint32_t counter;
-	uint32_t distNum;
+	uint32_t distNum; /*  */
 	std::vector<std::vector<bool> > L_bits; /* PCSA */
-	std::vector<uint8_t> M; /* HyperLogLog */
+	std::vector<int> M; /* HyperLogLog */
 public:
 	/* k = 128, 23 bits memory: 2^32 IP address , 1 hash functions */
 	Bucket() :
@@ -45,17 +45,17 @@ public:
 		return hashValue;
 	}
 
-	inline uint64_t nthHashFunctionBucket(uint8_t nth, uint64_t hashA,
+	inline uint64_t nthHashFunctionBucket(int nth, uint64_t hashA,
 			uint64_t hashB) {
 		return hashA + nth * hashB;
 	}
 
 	/* Rightmost bit'1 *//* 64 bit */
-	inline uint16_t getFirstIndex64(uint64_t hashValue, uint16_t k_numHashes) {
-		uint16_t index = -1;
-		uint16_t radix = log2(k_numHashes);
+	inline int getFirstIndex64(uint64_t hashValue, int k_numHashes) {
+		int index = -1;
+		int radix = log2(k_numHashes);
 		uint64_t temp = hashValue >> radix;
-		for (uint16_t i = 0; i < (64 - radix); i++) {
+		for (int i = 0; i < (64 - radix); i++) {
 			if ((temp & (1 << (64 - radix - 1 - i))) != 0) {
 				index = i;
 				break;
@@ -64,11 +64,11 @@ public:
 		return index;
 	}
 	/* 32 bit */
-	inline uint16_t getFirstIndex32(uint32_t hashValue, uint16_t k_numHashes) {
-		uint16_t index = -1;
-		uint16_t radix = log2(k_numHashes);
+	inline int getFirstIndex32(uint32_t hashValue, int k_numHashes) {
+		int index = -1;
+		int radix = log2(k_numHashes);
 		uint64_t temp = hashValue >> radix;
-		for (uint16_t i = 0; i < (32 - radix); i++) {
+		for (int i = 0; i < (32 - radix); i++) {
 			if ((temp & (1 << (32 - radix - 1 - i))) != 0) {
 				index = i;
 				break;

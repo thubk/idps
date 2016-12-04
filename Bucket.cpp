@@ -27,8 +27,8 @@ void Bucket::estimatePCSA64(const void * key, size_t lenKey) {
 	uint16_t b = getFirstIndex64(value, k_numHashes);
 	L_bits[x][b] = true;
 	uint32_t z = 0;
-	for (uint16_t n = 0; n < k_numHashes; n++) {
-		for (uint8_t i = 0; i < m_bits; i++) {
+	for (int n = 0; n < k_numHashes; n++) {
+		for (int i = 0; i < m_bits; i++) {
 			if (!L_bits[n][i]) {
 				z += i;
 				break;
@@ -46,8 +46,8 @@ void Bucket::estimatePCSA32(uint32_t key) {
 	uint16_t b = getFirstIndex32(value, k_numHashes);
 	L_bits[x][b] = true;
 	uint32_t z = 0;
-	for (uint16_t n = 0; n < k_numHashes; n++) {
-		for (uint8_t i = 0; i < m_bits; i++) {
+	for (int n = 0; n < k_numHashes; n++) {
+		for (int i = 0; i < m_bits; i++) {
 			if (!L_bits[n][i]) {
 				z += i;
 				break;
@@ -67,7 +67,7 @@ void Bucket::estimateHLL64(const void * key, size_t lenKey) {
 	uint16_t b = getFirstIndex64(value, k_numHashes);
 	M[x] = M[x] < b ? b : M[x];
 	uint32_t z = 0;
-	for (uint16_t n = 0; n < k_numHashes; n++) {
+	for (int n = 0; n < k_numHashes; n++) {
 		z += M[n];
 	}
 	distNum = (0.79402 * k_numHashes - 0.84249)
@@ -81,7 +81,7 @@ void Bucket::estimateHLL32(uint32_t key) {
 	uint16_t b = getFirstIndex32(value, k_numHashes);
 	M[x] = M[x] < b ? b : M[x];
 	uint32_t z = 0;
-	for (uint16_t n = 0; n < k_numHashes; n++) {
+	for (int n = 0; n < k_numHashes; n++) {
 		z += M[n];
 	}
 	distNum = (0.79402 * k_numHashes - 0.84249)

@@ -7,24 +7,24 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "BucketCMS.h"
 #include "MurmurHash3.h"
 using namespace std;
 
 class CountMinSketch {
 private:
-	uint8_t k_numHashes;
-	std::vector<std::vector<BucketCMS> > m_bits_row;
+	int k_numHashes;
+	std::vector<std::vector<uint32_t> > m_bits_row;
 public:
-	CountMinSketch(uint64_t m_bits, uint8_t numHashes) :
+	CountMinSketch(uint64_t m_bits, int numHashes) :
 			k_numHashes(numHashes), m_bits_row(numHashes,
-					vector<BucketCMS>(m_bits, BucketCMS())) {
+					vector<uint32_t>(m_bits, 0)) {
 	}
 
-	void process(const void * key1, size_t lenKey, uint32_t key);
-	bool contain(const void * key1, size_t lenKey, uint32_t key);
-
-	uint8_t getHashIndex(const void * key1, size_t lenKey, uint32_t key);
+	void process(const void * key, size_t lenKey);
+	bool contain(const void * key, size_t lenKey);
+	void updateCounter(const void * key, size_t lenKey, uint32_t min);
+	void resetCounter(const void * key, size_t lenKey, uint32_t min);
+	uint32_t getMinCounter(const void * key, size_t lenKey);
 	inline std::array<uint64_t, 2> hashFunctionCMS(const void * key,
 			size_t lenKey) {
 		std::array<uint64_t, 2> hashValue;
@@ -32,7 +32,7 @@ public:
 		return hashValue;
 	}
 
-	inline uint64_t nthHashFunctionCMS(uint8_t nth, uint64_t hashA,
+	inline uint64_t nthHashFunctionCMS(int nth, uint64_t hashA,
 			uint64_t hashB, uint64_t filterSize) {
 		return (hashA + nth * hashB) % filterSize;
 	}

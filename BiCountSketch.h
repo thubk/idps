@@ -17,11 +17,11 @@ using namespace std;
 
 class BiCountSketch {
 private:
-	uint8_t k_numHashes;
+	int k_numHashes;
 	std::vector<BloomFilter> bf_row;/* bloomfilter */
 	std::vector<std::vector<Bucket> > m_bits_row;/*  bucket */
 public:
-	BiCountSketch(uint64_t m_bits, uint8_t numHashes) :
+	BiCountSketch(uint64_t m_bits, int numHashes) :
 			k_numHashes(numHashes), m_bits_row(numHashes,
 					vector<Bucket>(m_bits, Bucket())), bf_row(numHashes,
 					BloomFilter()) {
@@ -30,12 +30,17 @@ public:
 			size_t lenKey, uint32_t key);/* key1: DIP key2: SIP */
 	void update(const void * key1, const void * key2, size_t lenKey);
 	bool contain(const void * key, size_t lenKey);
-	uint16_t getMinFrequence(const void * key, size_t lenKey);
+	uint32_t getMinFrequence(const void * key, size_t lenKey);
 
-	uint8_t getHashIndex(const void * key1, size_t lenKey, bool flag,
+	int getHashIndex(const void * key1, size_t lenKey, bool flag,
 			uint32_t key);
 
 	uint32_t getDistNumBCS(const void * key1, size_t lenKey, uint32_t key);
+
+	int getHashIndexBucket(const void * key1, size_t lenKey, uint32_t key);
+	uint32_t getSumHashesRow(int index);
+
+
 
 	inline std::array<uint64_t, 2> hashFunctionBCS(const void * key,
 			size_t lenKey) {
@@ -44,7 +49,7 @@ public:
 		return hashValue;
 	}
 
-	inline uint64_t nthHashFunctionBCS(uint8_t nth, uint64_t hashA,
+	inline uint64_t nthHashFunctionBCS(int nth, uint64_t hashA,
 			uint64_t hashB, uint64_t filterSize) {
 		return (hashA + nth * hashB) % filterSize;
 	}
