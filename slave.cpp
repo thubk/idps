@@ -38,7 +38,7 @@ void* processSocketClient(void *) {
 		perror("Client: Server'IP list failed");
 	}
 	const char *ip = address[index].c_str();
-	uint32_t key = getIPAddress(worker_list[index].c_str()); /* Server'IP -> Hash Key */
+	uint32_t key = getIPAddress(server_list[index].c_str()); /* Server'IP -> Hash Key */
 	puts("Master'IP: ");
 	puts(ip);
 	int connection;

@@ -35,8 +35,8 @@ void BiCountSketch::process(const void * key1, const void * key2,
 			break;
 		}
 	}
-	/* estimate dist address */
 }
+/* review */
 void BiCountSketch::update(const void * key1, const void * key2,
 		size_t lenKey) {
 	auto hashValues = hashFunctionBCS(key1, lenKey);

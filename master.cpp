@@ -28,7 +28,7 @@ int getIndex(int sock){/* extra */
 }
 
 void* handleConnection(void *sock_desc) {
-	uint32_t key = getIPAddress(worker_list[0].c_str());/* default */
+	uint32_t key = getIPAddress(server_list[0].c_str());/* default */
 	int sock = *(int*) sock_desc;
 	int index = getIndex(sock);
 	int read_size;

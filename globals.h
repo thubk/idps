@@ -16,13 +16,14 @@ using namespace std;
 
 
 BiCountSketch phase2(8, 16); /* MIN */ /* phase 2 */ /* 8: number of buckets | 16: hash functions */
-CountMinSketch phase1(8,16); /* MAX */ /* phase 1 */
-CountMinSketch syn_list(65535, 8); /* rule : SYN packets/s */
+CountMinSketch phase1(8,16); /* MIN */ /* phase 1 */
+CountMinSketch syn_list(10000, 8); /* rule : SYN packets/s */
+BloomFilter exsyn_list(10000, 8);
 Masters master(); /* Master: phase 1 -> on/off phase_flag */
 
 uint8_t length;/* number of addresses */
-string address[MAX_MASTER];
-string worker_list[MAX_WORKER];
+string address[MAX_WORKER]; /* worker  ip*/
+string server_list[MAX_MASTER]; /* server ip */
 string slave_list[MAX_WORKER]; /* review */
 bool used_address[MAX_MASTER]{false};
 bool phase_flag{false};/* Master -> phase 2, 3 */

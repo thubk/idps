@@ -18,12 +18,31 @@ using namespace std;
 #define DEFAULT_DEVICE     "wlan0"
 #define NO_ZC_BUFFER_LEN	9000
 
-
 pfring *pd;
 int num_threads = 3;
 
 u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
+
+bool checkServerIP(uint32_t ip) {/* check IP fall in server_list */
+	char* addr = intoa(ip);
+	for (int i = 0; i < MAX_MASTER; i++) {
+		if (server_list[i] == addr) {/* review */
+			return true;
+		}
+	}
+	return false;
+}
+
+int getAttackVictim(){
+	int index = -1; /* no victim */
+	for (int i = 0; i< MAX_MASTER; i++) {
+		if(attack[i]){
+			index = i;
+		}
+	}
+	return index;
+}
 
 int bind2core(u_int core_id) {
 	cpu_set_t cpuset;
@@ -40,28 +59,43 @@ int bind2core(u_int core_id) {
 	}
 }
 
-double delta_time(struct timeval * now, struct timeval * before) {
-	time_t delta_seconds;
-	time_t delta_microseconds;
-
-	delta_seconds = now->tv_sec - before->tv_sec;
-	delta_microseconds = now->tv_usec - before->tv_usec;
-
-	if (delta_microseconds < 0) {
-		delta_microseconds += 1000000;
-		--delta_seconds;
-	}
-	return ((double) (delta_seconds * 1000) + (double) delta_microseconds / 1000);
-}
-
-
-
 void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 		const u_char *user_bytes) {
 	long threadId = (long) user_bytes;
-	cout << "Thread Id: " << threadId << "\n";
-	//string ip_src = intoa(hdr->extended_hdr.parsed_pkt.ip_src.v4);
-	//cout << unsigned(hdr->extended_hdr.parsed_pkt.tcp.flags) << "\n";
+	uint32_t src_key = hdr->extended_hdr.parsed_pkt.ip_src.v4;
+	uint32_t dst_key = hdr->extended_hdr.parsed_pkt.ip_dst.v4;
+	/* phase 1 */
+	if (checkServerIP(dst_key)) {
+		phase1.process(&dst_key, sizeof(uint32_t));
+	}
+	/* phase 2 */
+	if (phase_flag) {/* phase 2: active */
+		if (checkServerIP(dst_key)) {/* --> dst */
+			uint64_t key = (uint64_t(dst_key) << 32) + uint64_t(src_key);
+			phase2.process(&dst_key, &key, &src_key, sizeof(uint32_t), dst_key);
+			/* SYN flag */ /* review RST */
+			uint8_t flag = hdr->extended_hdr.parsed_pkt.tcp.flags;
+			if(flag == 2) { /* SYN flag -> src*/
+				syn_list.process(&src_key, sizeof(uint32_t));
+			}
+		}
+		if (checkServerIP(src_key)) {/* src --> */
+			uint64_t key = (uint64_t(src_key) << 32) + uint64_t(dst_key);
+			phase2.update(&src_key, &key, sizeof(uint32_t));
+		}
+	}
+	/* attack -> process src */
+	if(getAttackVictim() > 0) {
+		int index = getAttackVictim();
+		if(server_list[index] == intoa(dst_key)) {
+			if(syn_list.contain(&src_key, sizeof(uint32_t))) {
+				/* send a rule drop -> controller */
+
+
+			}
+		}
+	}
+
 }
 void* packet_consumer_thread(void* _id) {
 	long thread_id = (long) _id;
@@ -103,7 +137,7 @@ void * startPFring(void *) {
 	use_extended_pkt_header = 1;
 
 	if (device == NULL)
-		device = (char *)DEFAULT_DEVICE;
+		device = (char *) DEFAULT_DEVICE;
 
 	bind2core(bind_core);
 

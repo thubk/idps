@@ -14,6 +14,17 @@ using namespace std;
 #define TIMEINTERVAL_START 5
 #define MAX_THREAD 5
 
+/* thread for phase 1 */
+
+
+
+/* thread for phase 2,3 */
+
+
+
+/* thread for SYN flag */
+
+
 
 int main(int argc, char *argv[]) {
 	pthread_t thread[MAX_THREAD];
@@ -27,7 +38,7 @@ int main(int argc, char *argv[]) {
 		string addr = line;
 		size_t f = addr.find(":");
 		address[i] = addr.substr(0, f);
-		worker_list[i] = addr.substr(f+1);
+		server_list[i] = addr.substr(f+1);
 		i++;
 	}
 	pthread_create(&thread[length], NULL, startPFring, NULL);
