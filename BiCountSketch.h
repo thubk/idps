@@ -30,7 +30,7 @@ public:
 			size_t lenKey, uint32_t key);/* key1: DIP key2: SIP */
 	void update(const void * key1, const void * key2, size_t lenKey);
 	bool contain(const void * key, size_t lenKey);
-	uint16_t getMinFrequence(const void * key, size_t lenKey);
+	uint32_t getMinFrequence(const void * key, size_t lenKey);
 
 	uint8_t getHashIndex(const void * key1, size_t lenKey, bool flag,
 			uint32_t key);

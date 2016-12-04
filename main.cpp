@@ -6,9 +6,11 @@
 #include "master.cpp"
 #include "slave.cpp"
 #include "globals.h"
+#include "protocols.h"
+
 using namespace std;
 
-#define DEFAULT_ADDRESS "127.0.0.1"
+#define DEFAULT_ADDRESS "127.0.0.1" /* simulator interface */
 #define TIMEINTERVAL_START 5
 #define MAX_THREAD 5
 
@@ -25,10 +27,11 @@ int main(int argc, char *argv[]) {
 		string addr = line;
 		size_t f = addr.find(":");
 		address[i] = addr.substr(0, f);
-		server_list[i] = addr.substr(f+1);
+		worker_list[i] = addr.substr(f+1);
 		i++;
 	}
 	pthread_create(&thread[length], NULL, startPFring, NULL);
+	sleep(10);
 	for (uint8_t n = 0; n < length; n++) {
 		if (address[n] == DEFAULT_ADDRESS) {
 			used_address[n] = true; /* using */

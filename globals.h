@@ -8,21 +8,31 @@
 
 #include "BiCountSketch.h"
 #include "CountMinSketch.h"
+#include "Masters.h"
 using namespace std;
 
-/* 8: number of bucket << | 16: hash function */
-BiCountSketch bcs(8, 16);
-CountMinSketch cms(8,16);
+#define MAX_MASTER 3 /* max: 3 server -> 3 master*/
+#define MAX_WORKER 3 /* max; 3 worker */
 
-#define MAX_MASTER 3 /* max: 3 server */
+
+BiCountSketch phase2(8, 16); /* MIN */ /* phase 2 */ /* 8: number of buckets | 16: hash functions */
+CountMinSketch phase1(8,16); /* MAX */ /* phase 1 */
+CountMinSketch syn_list(65535, 8); /* rule : SYN packets/s */
+Masters master(); /* Master: phase 1 -> on/off phase_flag */
 
 uint8_t length;/* number of addresses */
 string address[MAX_MASTER];
-string server_list[MAX_MASTER];
-bool used_address[MAX_MASTER];
+string worker_list[MAX_WORKER];
+string slave_list[MAX_WORKER]; /* review */
+bool used_address[MAX_MASTER]{false};
+bool phase_flag{false};/* Master -> phase 2, 3 */
+bool actived_address[MAX_MASTER]{false};
+bool attack[MAX_MASTER]{false}; /* attack -> server */
+uint32_t exasym_num[MAX_WORKER]{0}; /* not accumulation -> 0*/
+uint32_t exdist_num[MAX_WORKER]{0}; /* slave -> master*/
 
-
-/* 65535 buckets, 8 hash functions */
+#define MAX_CONNECTIONS 3
+int new_sock[MAX_CONNECTIONS]{0};
 
 uint32_t getIPAddress(const char *addr) {
 		int byte[4]{0};
@@ -33,12 +43,9 @@ uint32_t getIPAddress(const char *addr) {
 char* _intoa(unsigned int addr, char* buf, u_short bufLen) {
 	char *cp, *retStr;
 	u_int byte;
-	;
 	int n;
-
 	cp = &buf[bufLen];
 	*--cp = '\0';
-
 	n = 4;
 	do {
 		byte = addr & 0xff;

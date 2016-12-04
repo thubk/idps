@@ -14,29 +14,65 @@
 using namespace std;
 
 #define BUFFER_SIZE 2048
-#define MAX_CONNECTIONS 3
 #define MASTER_PORT 9999
-void* handleConnection(void *sock_desc) {
-	int sock = *(int*) sock_desc;
-	int read_size;
-	char *message, buffer[BUFFER_SIZE];
-	while((read_size = recv(sock, buffer, BUFFER_SIZE, 0)) > 0) {
-		puts(buffer);
-		std::array<uint32_t, 4> values = readMessage(buffer);
-		/*udpate hash table */
-
-
-		memset(&buffer, 0, sizeof(buffer));
-		if(values[3] == 0) {
-			write(sock , sendSTATUS(NO) , strlen(sendSTATUS(NO)));
-		} else {
-			write(sock , sendSTATUS(OK) , strlen(sendSTATUS(OK)));
+#define TIMEINTERVAL_MASTER 1
+int getIndex(int sock){/* extra */
+	int index = -1;
+	for(int i = 0; i < MAX_CONNECTIONS; i++){
+		if(new_sock[i] == sock){
+			index = i;
+			break;
 		}
 	}
-	if(read_size == 0) {
+	return index;
+}
+
+void* handleConnection(void *sock_desc) {
+	uint32_t key = getIPAddress(worker_list[0].c_str());/* default */
+	int sock = *(int*) sock_desc;
+	int index = getIndex(sock);
+	int read_size;
+	char *message, buffer[BUFFER_SIZE];
+	while (1) {
+		sleep(TIMEINTERVAL_MASTER);
+		if (phase_flag) {
+			/* request phase 1,2,3 > client */
+			message = sendMessage(0, 2, 0, 0);
+			write(sock, message, strlen(message));
+			memset(message, 0, sizeof(message));
+		} else {
+			message = sendMessage(0, 1, 0, 0);
+			write(sock, message, strlen(message));
+			memset(message, 0, sizeof(message));
+		}
+		if ((read_size = recv(sock, buffer, BUFFER_SIZE, 0)) > 0) {
+			std::array<uint32_t, 4> values = readMessage(buffer);
+			uint8_t code = values[0];
+			switch (code) {
+			case 1:
+				/* update phase 1 */
+				puts("Phase 1: Slave -> Master");
+				puts(buffer);
+				phase1.update(&key, sizeof(uint32_t), (uint32_t) values[1]);
+				break;
+			case 2:
+				/* update phase 2,3 */
+				puts("Phase 2: Slave -> Master");
+				puts(buffer);
+				phase1.update(&key, sizeof(uint32_t), (uint32_t) values[1]);
+				exasym_num[index] = values[2];
+				exdist_num[index] = values[3];
+				break;
+			default:
+				perror("not support");
+				break;
+			}
+		}
+	}
+	if (read_size == 0) {
 		puts("Master: client disconnected");
 		fflush(stdout);
-	} else if(read_size == -1) {
+	} else if (read_size == -1) {
 		perror("Master: receive failed");
 	}
 	free(sock_desc);
@@ -44,12 +80,13 @@ void* handleConnection(void *sock_desc) {
 }
 
 void* processSocketServer(void *) {
-	int socket_desc, client_sock, c, *new_sock;
+	pthread_t clientThread[MAX_CONNECTIONS];
+	int socket_desc, client_sock, c;
 	struct sockaddr_in server, client;
 
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
 
-	if(socket_desc < 0) {
+	if (socket_desc < 0) {
 		perror("Master: could not create socket");
 	}
 
@@ -57,7 +94,7 @@ void* processSocketServer(void *) {
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(MASTER_PORT);
 
-	if(bind(socket_desc, (struct sockaddr *) &server, sizeof(server)) < 0) {
+	if (bind(socket_desc, (struct sockaddr *) &server, sizeof(server)) < 0) {
 		perror("Master: bind failed");
 		return NULL;
 	}
@@ -65,17 +102,18 @@ void* processSocketServer(void *) {
 	listen(socket_desc, MAX_CONNECTIONS);
 	c = sizeof(struct sockaddr_in);
 	puts("Master: listening...");
-	while((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c))) {
+	int i = 0;
+	while ((client_sock = accept(socket_desc, (struct sockaddr *) &client,
+			(socklen_t*) &c))) {
 		puts("Master: connection accepted");
-		pthread_t clientThread;
-		new_sock = new int[1];
-		*new_sock = client_sock;
-		if(pthread_create(&clientThread, NULL, handleConnection, (void*) new_sock) < 0) {
+		new_sock[i] = client_sock;
+		if (pthread_create(&clientThread[i], NULL, handleConnection,
+				(void*) &new_sock[i]) < 0) {
 			perror("Master: could not create thread");
 		}
-		//pthread_join(clientThread, NULL);
+		i++;
 	}
-	if(client_sock < 0) {
+	if (client_sock < 0) {
 		perror("Master: accept failed");
 	}
 	return NULL;

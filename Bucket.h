@@ -17,7 +17,7 @@ private:
 	uint16_t k_numHashes;/*  */
 	uint8_t m_bits; /* size of bitmap */
 	uint32_t counter;
-	uint32_t distNum;
+	uint32_t distNum; /*  */
 	std::vector<std::vector<bool> > L_bits; /* PCSA */
 	std::vector<uint8_t> M; /* HyperLogLog */
 public:

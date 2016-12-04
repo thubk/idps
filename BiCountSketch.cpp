@@ -63,15 +63,15 @@ bool BiCountSketch::contain(const void * key, size_t lenKey) {
 	return true;
 }
 
-uint16_t BiCountSketch::getMinFrequence(const void * key, size_t lenKey) {
+uint32_t BiCountSketch::getMinFrequence(const void * key, size_t lenKey) {
 	auto hashValues = hashFunctionBCS(key, lenKey);
 	uint16_t index0 = nthHashFunctionBCS(0, hashValues[0], hashValues[1],
 			m_bits_row[0].size());
-	uint16_t _min = m_bits_row[0][index0].getCounter();
+	uint32_t _min = m_bits_row[0][index0].getCounter();
 	for (uint8_t n = 0; n < k_numHashes; n++) {
 		uint16_t index = nthHashFunctionBCS(n, hashValues[0], hashValues[1],
 				m_bits_row[n].size());
-		uint16_t temp = m_bits_row[n][index].getCounter();
+		uint32_t temp = m_bits_row[n][index].getCounter();
 		_min = (_min > temp) ? temp : _min;
 	}
 	return _min;
