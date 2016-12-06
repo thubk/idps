@@ -20,17 +20,15 @@ using namespace std;
 #define NO_ZC_BUFFER_LEN	9000
 #define DELTA_TIME3 5
 
-
+#define THRESHOLD 80 /* 80 SYN packets */
 pfring *pd;
 int num_threads = 2;
 
 u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
 
-void handleSYNFlag(int sig){
-	alarm(DELTA_TIME3);
-	signal(SIGALRM, handleSYNFlag);
-}
+uint64_t name = 0;
+
 
 bool checkServerIP(uint32_t ip) {/* check IP fall in server_list */
 	char* addr = intoa(ip);
@@ -42,10 +40,10 @@ bool checkServerIP(uint32_t ip) {/* check IP fall in server_list */
 	return false;
 }
 
-int getAttackVictim(){
+int getAttackVictim() {
 	int index = -1; /* no victim */
-	for (int i = 0; i< MAX_MASTER; i++) {
-		if(attack[i]){
+	for (int i = 0; i < MAX_MASTER; i++) {
+		if (attack[i]) {
 			index = i;
 		}
 	}
@@ -81,10 +79,13 @@ void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 		if (checkServerIP(dst_key)) {/* --> dst */
 			uint64_t key = (uint64_t(dst_key) << 32) + uint64_t(src_key);
 			phase2.process(&dst_key, &key, &src_key, sizeof(uint32_t), dst_key);
-			/* SYN flag */ /* review RST */
+			/* SYN flag *//* review RST */
 			uint8_t flag = hdr->extended_hdr.parsed_pkt.tcp.flags;
-			if(flag == 2) { /* SYN flag -> src*/
+			if (flag == 2) { /* SYN flag -> src*/
 				syn_list.process(&src_key, sizeof(uint32_t));
+				if (syn_list.getMinCounter(&src_key, sizeof(uint32_t)) >= THRESHOLD) {
+					exsyn_list.add(&src_key, sizeof(uint32_t));
+				}
 			}
 		}
 		if (checkServerIP(src_key)) {/* src --> */
@@ -93,13 +94,13 @@ void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 		}
 	}
 	/* attack -> process src */
-	if(getAttackVictim() > 0) {
+	if (getAttackVictim() > 0) {
 		int index = getAttackVictim();
-		if(server_list[index] == intoa(dst_key)) {
-			if(syn_list.contain(&src_key, sizeof(uint32_t))) {
+		if (server_list[index] == intoa(dst_key)) {
+			if (exsyn_list.contain(&src_key, sizeof(uint32_t))) {
 				/* send a rule drop -> controller */
-
-
+				postrules(src_key,name);
+				name++;
 			}
 		}
 	}

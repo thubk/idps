@@ -6,6 +6,11 @@
 #include <math.h>
 #include <string>
 
+#include <CkHttpRequest.h>
+#include <CkHttp.h>
+#include <CkHttpResponse.h>
+
+
 #include "BiCountSketch.h"
 #include "CountMinSketch.h"
 #include "Masters.h"
@@ -80,6 +85,41 @@ uint32_t sumList(uint32_t list[]){
 		sum += list[i];
 	}
 	return sum;
+}
+
+void postrules(uint32_t src_ip, int name_flow) {
+
+    CkHttpRequest req;
+    CkHttp http;
+
+    bool success;
+
+    success = http.UnlockComponent("THU-NHAT");
+    if (success != true) {
+        std::cout << http.lastErrorText() << "\r\n";
+        return;
+    }
+
+    char *ip = intoa(src_ip);
+    ostringstream id;
+    id << name_flow;
+    const char * scrip = (const char *)ip;
+    string ipsrc = scrip;
+    http.put_AcceptCharset("");
+    http.put_UserAgent("");
+    http.put_AcceptLanguage("");
+    http.put_AllowGzip(false);
+    string jsonText ="{\"switch\":\"00:00:00:00:00:00:00:01\",\"name\":\""+id.str()+"\",\"ipv4_src\":\"" + ipsrc + "\",\"cookie\":\"0\",\"priority\":\"1001\",\"in_port\":\"1\",\"eth_type\":\"0x0800\",\"active\":\"true\",\"actions\":\"\"}";
+    cout<<jsonText<<endl;
+    CkHttpResponse *resp = 0;
+    resp = http.PostJson("http://127.0.0.1:8080/wm/staticflowpusher/json",jsonText.c_str());
+    if (resp == 0 ) {
+        std::cout << http.lastErrorText() << "\r\n";
+    }
+    else {
+        std::cout << resp->bodyStr() << "\r\n";
+        delete resp;
+    }
 }
 
 #endif /* GLOBALS_H_ */

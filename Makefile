@@ -2,6 +2,7 @@ CPP = g++ -std=gnu++11
 CFLAGS		= -g
 KERNEL_DIR	=	../libraries/kernel
 LIBPCAP_DIR	=	/usr/local/lib
+HTTP		= 	../libraries/http/libchilkat-9.5.0.a -lresolv -lpthread
 INCLUDE		=	-I$(KERNEL_DIR) -I$(LIBPCAP_DIR) -I/usr/local/include
 LIBPFRING	=	libpfring.a
 RANLIB		=	ranlib
@@ -10,7 +11,7 @@ LIBS		=	/usr/local/lib/libpfring.so -lpthread
 all: $(LIBPFRING) main
 
 main: main.cpp $(LIBPFRING)
-	$(CPP) $(INCLUDE) $< $(LIBPFRING) -o $@ $(LIBS) $(LIBPCAP_DIR)/libpcap.so -lrt
+	$(CPP) $(INCLUDE) $< $(LIBPFRING) -o $@ $(LIBS) $(HTTP) $(LIBPCAP_DIR)/libpcap.so -lrt
 	
 $(LIBPFRING):$(OBJ)
 		@rm -f $@
