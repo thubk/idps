@@ -25,6 +25,8 @@ BiCountSketch phase2(8, 16); /* MIN */ /* phase 2 */ /* 8: number of buckets | 1
 CountMinSketch syn_list(10000, 8); /* rule : SYN packets/s */
 BloomFilter exsyn_list(10000, 8);
 
+BloomFilter drop_list(10000, 8); /* drop ip list */
+
 
 int length;/* number of addresses */
 string worker_list[MAX_WORKER]; /* worker  IP*/

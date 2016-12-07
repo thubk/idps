@@ -99,8 +99,13 @@ void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 		if (server_list[index] == intoa(dst_key)) {
 			if (exsyn_list.contain(&src_key, sizeof(uint32_t))) {
 				/* send a rule drop -> controller */
-				postrules(src_key,name);
-				name++;
+				if(!drop_list.contain(&src_key, sizeof(uint32_t))) {
+					postrules(src_key,name);
+					drop_list.add(&src_key, sizeof(uint32_t));
+					name++;
+
+				}
+
 			}
 		}
 	}
