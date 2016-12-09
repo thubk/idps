@@ -1,17 +1,17 @@
 CPP = g++ -std=gnu++11
 CFLAGS		= -g
-KERNEL_DIR	=	../libraries/kernel
-LIBPCAP_DIR	=	../libraries/libpcap
+KERNEL_DIR	=	
 HTTP		= 	../libraries/http/libchilkat-9.5.0.a -lresolv -lpthread
+LIBS		=	/usr/local/pfring/lib/libpfring.so -lpthread
+LIBPCAP_DIR	=	/usr/local/pfring/lib//libpcap.so -lrt
 INCLUDE		=	-I$(KERNEL_DIR) -I$(LIBPCAP_DIR) -I/usr/local/include
 LIBPFRING	=	libpfring.a
 RANLIB		=	ranlib
 OBJ			=	MurmurHash3.o BiCountSketch.o CountMinSketch.o Masters.o BloomFilter.o pfringcpp.o Bucket.o master.o slave.o protocols.o
-LIBS		=	../libraries/lib/libpfring.a -lpthread
 all: $(LIBPFRING) main
 
 main: main.cpp $(LIBPFRING)
-	$(CPP) $(INCLUDE) $< $(LIBPFRING) -o $@ $(LIBS) $(HTTP) $(LIBPCAP_DIR)/libpcap.a -lrt
+	$(CPP) $(INCLUDE) $< $(LIBPFRING) -o $@ $(LIBS) $(HTTP) $(LIBPCAP_DIR)
 	
 $(LIBPFRING):$(OBJ)
 		@rm -f $@
