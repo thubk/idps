@@ -31,6 +31,7 @@ std::array<uint32_t, 5> readMessage(char* msg) {
 		values[3] = atoi(v3.c_str());
 		values[4] = atoi(v4.c_str());
 	} else {
+		cout << "Fail Protocols!!!\n";
 		/* send status: NO */
 	}
 	return values;

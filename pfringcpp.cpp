@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <pthread.h>
 #include <sched.h>
@@ -28,6 +29,9 @@ u_int8_t wait_for_packet = 1;
 u_int8_t use_extended_pkt_header = 0;
 
 uint64_t name = 0;
+
+ofstream attack_file;
+
 
 
 bool checkServerIP(uint32_t ip) {/* check IP fall in server_list */
@@ -104,7 +108,7 @@ void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 					postrules(src_key,name);
 					drop_list.add(&src_key, sizeof(uint32_t));
 					name++;
-
+					attack_file << intoa(src_key) << endl;
 				}
 
 			}
@@ -141,6 +145,9 @@ void* packet_consumer_thread(void* _id) {
 	return NULL;
 }
 void * startPFring(void *) {
+
+	attack_file.open("attack.txt"); /* attack IP file*/
+
 	char *device = NULL, c, buff[32], path[256] = { 0 }, *reflector_device =
 	NULL;
 	int promisc = 1, snaplen = DEFAULT_SNAPLEN, rc;
@@ -192,6 +199,7 @@ void * startPFring(void *) {
 		}
 
 	}
+	//attack_file.close();
 	return NULL;
 }
 
