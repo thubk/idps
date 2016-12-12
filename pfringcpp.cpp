@@ -73,6 +73,7 @@ void processsPacket(const struct pfring_pkthdr *hdr, const u_char *p,
 	/* phase 1 */
 	if (checkServerIP(dst_key)) {
 		phase1.process(&dst_key, sizeof(uint32_t));
+
 	}
 	/* phase 2 */
 	if (phase_flag) {/* phase 2: active */
@@ -145,7 +146,7 @@ void * startPFring(void *) {
 	int promisc = 1, snaplen = DEFAULT_SNAPLEN, rc;
 	u_int32_t flags = 0;
 	int bind_core = -1;
-	packet_direction direction = rx_and_tx_direction; //review
+	packet_direction direction = rx_only_direction; //review
 
 	/* review */
 	use_extended_pkt_header = 1;
