@@ -53,25 +53,26 @@ void* handleConnection(void *sock_desc) {
 		}
 		if ((read_size = recv(sock, buffer, BUFFER_SIZE, 0)) > 0) {
 			std::array<uint32_t, 5> values = readMessage(buffer);
+			memset(buffer, 0, sizeof(buffer));
 			int code = values[0];
 			switch (code) {
 			case 1:
 				/* update phase 1 */
-				puts("Phase 1: Slave -> Master");
-				puts(buffer);
+				//puts("Phase 1: Slave -> Master");
+				//puts(buffer);
 				phase1.updateCounter(&server_key, sizeof(uint32_t), (uint32_t) values[1]);
 				break;
 			case 2:
 				/* update phase 2,3 */
-				puts("Phase 2: Slave -> Master");
-				puts(buffer);
+				//puts("Phase 2: Slave -> Master");
+				//puts(buffer);
 				phase1.updateCounter(&server_key, sizeof(uint32_t), (uint32_t) values[1]);
 				exasym_num[index] = values[2];
 				exdist_num[index] = values[3];
 				sum_num[index] = values[4];
 				break;
 			default:
-				perror("not support");
+				perror("Master: not support");
 				break;
 			}
 		}

@@ -16,7 +16,7 @@ using namespace std;
 
 #define DEFAULT_SNAPLEN 	128
 #define MAX_NUM_THREADS 	64
-#define DEFAULT_DEVICE     "wlan0"
+#define DEFAULT_DEVICE     "eth1"
 #define NO_ZC_BUFFER_LEN	9000
 #define DELTA_TIME3 5
 

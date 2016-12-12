@@ -63,9 +63,10 @@ void* processSocketClient(void *) {
 	while (1) {
 		if (recv(sock, buffer, BUFFER_SIZE, 0) > 0) {
 			std::array<uint32_t, 5> values = readMessage(buffer);
+			memset(buffer, 0, sizeof(buffer));
 			int code = values[0];
-			puts("Master -> Slave");
-			puts(buffer);
+			//puts("Master -> Slave");
+			//puts(buffer);
 			switch (code) {
 			case 0:
 				if (values[1] == 1) {
@@ -105,7 +106,7 @@ void* processSocketClient(void *) {
 				}
 				break;
 			default:
-				perror("not support");
+				perror("Slave: not support");
 				break;
 			}
 		}

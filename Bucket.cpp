@@ -37,7 +37,6 @@ void Bucket::estimatePCSA64(const void * key, size_t lenKey) {
 	}
 	distNum = (k_numHashes * pow(2, ((double) z / (double) k_numHashes)))
 			/ 0.77351;
-	cout << distNum << "\n";
 }
 
 void Bucket::estimatePCSA32(uint32_t key) {
