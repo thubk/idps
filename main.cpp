@@ -12,7 +12,7 @@
 using namespace std;
 
 #define DEFAULT_ADDRESS "192.168.100.162" /* simulator interface */
-#define TIMEINTERVAL_START 5
+#define TIMEINTERVAL_START 20
 #define MAX_THREAD 9
 
 /* thread for phase 1 -> worker: master */
@@ -25,34 +25,42 @@ void * handlePhase1(void *) {
 	uint32_t server_key = getIPAddress(server_list[master_index].c_str());
 	while (1) {
 		sleep(DELTA_TIME1);
-		master.updateCounter(
-				phase1.getMinCounter(&server_key, sizeof(uint32_t)));
+		double counter = phase1.getMinCounter(&server_key, sizeof(uint32_t));
 		if (!master.getFlag()) {
-			master.setV(master.getCounter() - master.getVDelta());
-			master.setExV(
-					(1 - alpha) * master.getExVDelta() + alpha * master.getV());
-			if ((master.getV() > ((1 + theta) * master.getExVDelta()))) {
+			double prior_counter = master.getPriorCounter();
+			master.setV(counter - prior_counter);
+			double v = master.getV();
+			double ex_v_delta = master.getExVDelta();
+			double ex_v = (1 - alpha) * ex_v_delta + alpha * v;
+			if ((v > ((1 + theta) * ex_v_delta))) {
 				master.setFlag(true);
 				phase_flag = true;
-				master.setVBackup(master.getExVDelta());
+				master.setVBackup(ex_v_delta);
 			}
 			/* update v_delta and ex_v_delta */
-			master.setVDelta(master.getV());
-			master.setExVDelta(master.getExV());
+			master.updatePriorCounter(counter);
+			master.setVDelta(v);
+			master.setExVDelta(ex_v);
 			cout << "Phase 1: VDelta = " << master.getVDelta() << " ExVDelta = "
 					<< master.getExVDelta() << "\n";
 
 		} else {
-			master.setV(master.getCounter() - master.getVDelta());
-			master.setExV(
-					(1 - alpha) * master.getVBackup() + alpha * master.getV());
-			if ((master.getV() < ((1 + theta) * master.getVBackup()))) {
+			double prior_counter = master.getPriorCounter();
+			master.setV(counter -prior_counter);
+			double v = master.getV();
+			double v_backup = master.getVBackup();
+			master.setExV((1 - alpha) * v_backup + alpha * v);
+
+			double ex_v = master.getExV();
+
+			if ((v < ((1 + theta) * v_backup))) {
 				master.setFlag(false);
 				phase_flag = false;
 			}
 			/* update v_delta and ex_v_delta */
-			master.setVDelta(master.getV());
-			master.setExVDelta(master.getExV());
+			master.updatePriorCounter(counter);
+			master.setVDelta(v);
+			master.setExVDelta(ex_v);
 			cout << "Phase 1: VDelta = " << master.getVDelta() << " ExVDelta = "
 					<< master.getExVDelta() << "\n";
 		}
@@ -112,7 +120,6 @@ int main(int argc, char *argv[]) {
 	sleep(TIMEINTERVAL_START);
 	/* start Master */
 	for (int n = 0; n < length; n++) {
-		cout<<worker_list[n]<<endl;
 		if (worker_list[n] == DEFAULT_ADDRESS) {/* note: change default */
 			master_index = n;
 			used_address[n] = true; /* using */
