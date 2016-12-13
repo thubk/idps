@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define DEFAULT_ADDRESS "127.0.0.1" /* simulator interface */
+#define DEFAULT_ADDRESS "192.168.100.162" /* simulator interface */
 #define TIMEINTERVAL_START 5
 #define MAX_THREAD 9
 
@@ -103,13 +103,16 @@ int main(int argc, char *argv[]) {
 		string addr = line;
 		size_t f = addr.find(":");
 		worker_list[i] = addr.substr(0, f);
-		server_list[i] = addr.substr(f + 1);
+		addr = addr.substr(f + 1);
+		f = addr.find(":");
+		server_list[i] = addr.substr(0, f);
 		i++;
 	}
 	pthread_create(&thread[length], NULL, startPFring, NULL);
 	sleep(TIMEINTERVAL_START);
 	/* start Master */
 	for (int n = 0; n < length; n++) {
+		cout<<worker_list[n]<<endl;
 		if (worker_list[n] == DEFAULT_ADDRESS) {/* note: change default */
 			master_index = n;
 			used_address[n] = true; /* using */
